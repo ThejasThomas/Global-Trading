@@ -1,4 +1,5 @@
-export interface IAxiosResponse {
+export interface IAxiosResponse<T> {
   success: boolean;
   message: string;
+  data: T;
 }

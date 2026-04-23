@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { registerUser } from "../../application/usecase/auth/register.usecase";
+import { generateToken } from "../../shared/utils/jwt";
+import { loginUser } from "../../application/usecase/auth/login.usecase";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -18,21 +20,39 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-// export const login = async (req: Request, res: Response) => {
-//   const { email, password } = req.body;
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { loginType } = req.body;
+    const user = await loginUser(req.body);
 
-//   const user = await User.findOne({ email });
+      if (loginType === "admin" && user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied: Admin only",
+      });
+    }
 
-//   if (!user) return res.status(400).json({ message: "User not found" });
+    if (loginType === "user" && user.role !== "user") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied: Users only",
+      });
+    }
 
-//   const isMatch = await bcrypt.compare(password, user.password);
+    const token = generateToken(user._id.toString(), user.role);
 
-//   if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
-
-//   // const token = generateToken({
-//   //   userId: user._id,
-//   //   role: user.role,
-//   // });
-
-//   // res.json({ token, role: user.role });
-// };
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      data: {
+        user,
+        token,
+      },
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

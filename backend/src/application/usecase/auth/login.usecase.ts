@@ -1,26 +1,30 @@
 import User from "../../../models/user.model";
+import { LoginDTO } from "../../types/auth.types";
 import bcrypt from "bcryptjs";
-import { generateToken } from "../../../shared/utils/jwt";
-import { LoginDTO, AuthResponse } from "../../types/auth.types";
+import { UserResponseDTO } from "../../types/user.Response.DTO";
 
 export const loginUser = async (
   data: LoginDTO
-): Promise<AuthResponse> => {
+): Promise<UserResponseDTO> => {
+  console.log("dataaa",data)
   const { email, password } = data;
 
   const user = await User.findOne({ email });
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    throw new Error("Invalid credentials");
+  }
 
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) throw new Error("Invalid credentials");
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw new Error("Invalid credentials");
+  }
 
-  const token = generateToken({
-    userId: user._id.toString(),
-    role: user.role,
-  });
+  const userObj = user.toObject();
 
   return {
-    token,
-    role: user.role,
+    _id: userObj._id.toString(),
+    name: userObj.name,
+    email: userObj.email,
+    role: userObj.role,
   };
 };

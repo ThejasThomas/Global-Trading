@@ -1,63 +1,64 @@
 'use client';
 
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Mail, Lock, User, CheckCircle, AlertCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { signup } from '../services/auth/authservice';
+import { Mail, Lock, CheckCircle, AlertCircle, Shield } from 'lucide-react';
+import { login } from '../services/auth/authservice';
 
 interface FormStatus {
   type: 'success' | 'error' | null;
   message: string;
 }
 
-const Register = () => {
+const AdminLogin = () => {
+  const navigate = useNavigate();
   const [formStatus, setFormStatus] = useState<FormStatus>({ type: null, message: '' });
-  const navigate=useNavigate()
 
   const formik = useFormik({
     initialValues: {
-      name: '',
       email: '',
       password: '',
     },
     validationSchema: Yup.object({
-      name: Yup.string()
-        .min(3, 'Name must be at least 3 characters')
-        .required('Name is required'),
       email: Yup.string()
         .email('Invalid email format')
         .required('Email is required'),
       password: Yup.string()
-        .min(8, 'Password must be at least 8 characters')
-        .matches(/[A-Z]/, 'Must contain at least one uppercase letter')
-        .matches(/[a-z]/, 'Must contain at least one lowercase letter')
-        .matches(/[0-9]/, 'Must contain at least one number')
+        .min(6, 'Password must be at least 6 characters')
         .required('Password is required'),
     }),
-    onSubmit: async (values, { setSubmitting, resetForm }) => {
+    onSubmit: async (values, { setSubmitting }) => {
       try {
-            const response = await signup(values);
+        const res = await login({ ...values, loginType: "admin" });
+        const { data } = res;
 
-    console.log("API RESPONSE:", response);
-        
+        if (data.user.role !== 'admin') {
+          setFormStatus({
+            type: 'error',
+            message: 'Access denied: Not an admin',
+          });
+          setSubmitting(false);
+          return;
+        }
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
         setFormStatus({
           type: 'success',
-          message: 'User registered successfully ✅',
+          message: 'Admin login successful ✅',
         });
-        
-        resetForm();
-        
+
         setTimeout(() => {
-          navigate('/login');
+          navigate('/admin/dashboard');
         }, 1000);
       } catch (err: any) {
         setFormStatus({
           type: 'error',
-          message: err?.response?.data?.message || 'Registration failed',
+          message: err?.response?.data?.message || 'Login failed',
         });
-      } finally {
         setSubmitting(false);
       }
     },
@@ -76,57 +77,54 @@ const Register = () => {
         .animate-float {
           animation: float 20s ease-in-out infinite;
         }
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-slideIn {
+          animation: slideIn 0.3s ease;
+        }
       `}</style>
       <div className="absolute top-[-50%] right-[-50%] w-[800px] h-[800px] rounded-full bg-white/10 blur-[80px] animate-float z-0"></div>
       
       <div className="grid grid-cols-1 gap-10 max-w-2xl w-full z-10 items-center">
-        {/* Form Container */}
+        {/* Admin Login Container */}
         <div className="bg-white/95 backdrop-blur-[10px] rounded-3xl p-[60px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] border border-white/30">
           <div className="w-full">
             {/* Header */}
             <div className="text-center mb-[50px]">
               <div className="flex justify-center mb-5">
-                <div className="w-[60px] h-[60px] rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center font-bold text-2xl text-white shadow-[0_10px_25px_rgba(102,126,234,0.4)]">TC</div>
+                <div className="w-[60px] h-[60px] rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center font-bold text-2xl text-white shadow-[0_10px_25px_rgba(102,126,234,0.4)] relative">
+                  <Shield size={32} />
+                  <div className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white">A</div>
+                </div>
               </div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2.5 tracking-tight">TapClone Technologies</h1>
-              <p className="text-base text-gray-600 leading-relaxed">Join our platform and start building amazing solutions</p>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2.5 tracking-tight">Admin Dashboard</h1>
+              <p className="text-base text-gray-600 leading-relaxed">TapClone Technologies Admin Portal</p>
             </div>
 
             {/* Form */}
             <form onSubmit={formik.handleSubmit} className="flex flex-col gap-6 mb-[30px]">
-              {/* Name Field */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor="name" className="flex items-center gap-2 font-semibold text-sm text-gray-800 uppercase tracking-wider">
-                  <User size={18} className="text-purple-600" />
-                  Full Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  name="name"
-                  placeholder="John Doe"
-                  className={`px-4 py-3.5 border-2 rounded-xl text-base transition-all bg-gray-50 text-gray-900 placeholder-gray-600 focus:outline-none focus:border-purple-600 focus:bg-white focus:ring-4 focus:ring-purple-100 ${formik.touched.name && formik.errors.name ? 'border-red-500' : 'border-gray-200'}`}
-                  value={formik.values.name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                />
-                {formik.touched.name && formik.errors.name && (
-                  <p className="text-sm text-red-500 font-medium">{formik.errors.name}</p>
-                )}
-              </div>
-
               {/* Email Field */}
               <div className="flex flex-col gap-2">
                 <label htmlFor="email" className="flex items-center gap-2 font-semibold text-sm text-gray-800 uppercase tracking-wider">
                   <Mail size={18} className="text-purple-600" />
-                  Email Address
+                  Admin Email
                 </label>
                 <input
                   id="email"
                   type="email"
                   name="email"
-                  placeholder="john@example.com"
-                  className={`px-4 py-3.5 border-2 rounded-xl text-base transition-all bg-gray-50 text-gray-900 placeholder-gray-600 focus:outline-none focus:border-purple-600 focus:bg-white focus:ring-4 focus:ring-purple-100 ${formik.touched.email && formik.errors.email ? 'border-red-500' : 'border-gray-200'}`}
+                  placeholder="admin@example.com"
+                  className={`px-4 py-3.5 border-2 rounded-xl text-base transition-all bg-gray-50 text-gray-900 placeholder-gray-600 focus:outline-none focus:border-purple-600 focus:bg-white focus:ring-4 focus:ring-purple-100 ${
+                    formik.touched.email && formik.errors.email ? 'border-red-500' : 'border-gray-200'
+                  }`}
                   value={formik.values.email}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -147,7 +145,9 @@ const Register = () => {
                   type="password"
                   name="password"
                   placeholder="••••••••"
-                  className={`px-4 py-3.5 border-2 rounded-xl text-base transition-all bg-gray-50 text-gray-900 placeholder-gray-600 focus:outline-none focus:border-purple-600 focus:bg-white focus:ring-4 focus:ring-purple-100 ${formik.touched.password && formik.errors.password ? 'border-red-500' : 'border-gray-200'}`}
+                  className={`px-4 py-3.5 border-2 rounded-xl text-base transition-all bg-gray-50 text-gray-900 placeholder-gray-600 focus:outline-none focus:border-purple-600 focus:bg-white focus:ring-4 focus:ring-purple-100 ${
+                    formik.touched.password && formik.errors.password ? 'border-red-500' : 'border-gray-200'
+                  }`}
                   value={formik.values.password}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -159,31 +159,14 @@ const Register = () => {
 
               {/* Status Messages */}
               {formStatus.type === 'error' && (
-                <style>{`
-                  @keyframes slideIn {
-                    from {
-                      opacity: 0;
-                      transform: translateY(-10px);
-                    }
-                    to {
-                      opacity: 1;
-                      transform: translateY(0);
-                    }
-                  }
-                  .animate-slideIn {
-                    animation: slideIn 0.3s ease;
-                  }
-                `}</style>
-              )}
-              {formStatus.type === 'error' && (
                 <div className="flex items-center gap-3 p-3.5 rounded-xl text-sm font-medium bg-red-50 text-red-900 border border-red-300 animate-slideIn">
-                  <AlertCircle size={18} />
+                  <AlertCircle size={18} className="flex-shrink-0" />
                   <span>{formStatus.message}</span>
                 </div>
               )}
               {formStatus.type === 'success' && (
                 <div className="flex items-center gap-3 p-3.5 rounded-xl text-sm font-medium bg-green-50 text-green-700 border border-green-300 animate-slideIn">
-                  <CheckCircle size={18} />
+                  <CheckCircle size={18} className="flex-shrink-0" />
                   <span>{formStatus.message}</span>
                 </div>
               )}
@@ -197,20 +180,31 @@ const Register = () => {
                 {formik.isSubmitting ? (
                   <>
                     <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    Creating Account...
+                    Verifying Admin...
                   </>
                 ) : (
-                  'Create Account'
+                  <>
+                    <Shield size={18} />
+                    Admin Login
+                  </>
                 )}
               </button>
             </form>
 
-            {/* Login Link */}
-            <p className="text-center text-gray-600 text-sm mb-0">
-              Already have an account?{' '}
-              <a href="/login" className="text-purple-600 no-underline font-semibold transition-all relative hover:text-purple-700 after:content-[''] after:absolute after:bottom-[-2px] after:left-0 after:w-0 after:h-0.5 after:bg-gradient-to-r after:from-purple-500 after:to-purple-700 after:transition-all hover:after:w-full">
-                Sign in here
-              </a>
+            {/* Admin Warning */}
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-300 mb-5">
+              <AlertCircle size={16} className="text-amber-700 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-amber-800">
+                <span className="font-semibold">Admin Only:</span> This login is restricted to authorized administrators only.
+              </p>
+            </div>
+
+            {/* Links */}
+            <p className="text-center text-gray-600 text-sm">
+              Not an admin?{' '}
+              <Link to="/login" className="text-purple-600 no-underline font-semibold transition-all relative hover:text-purple-700 after:content-[''] after:absolute after:bottom-[-2px] after:left-0 after:w-0 after:h-0.5 after:bg-gradient-to-r after:from-purple-500 after:to-purple-700 after:transition-all hover:after:w-full">
+                User Login
+              </Link>
             </p>
           </div>
         </div>
@@ -219,4 +213,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default AdminLogin;
