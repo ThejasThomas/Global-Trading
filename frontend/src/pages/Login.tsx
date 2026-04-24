@@ -40,7 +40,7 @@ const Login = () => {
         const { data } = res;
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        navigate("/");
+        navigate("/home");
 
         setLoginStatus({
           type: "success",
@@ -48,7 +48,7 @@ const Login = () => {
         });
 
         setTimeout(() => {
-          navigate('/');
+          navigate('/home');
         }, 1500);
       } catch (err: any) {
         setLoginStatus({
@@ -206,7 +206,7 @@ const Login = () => {
             <p className="text-center text-gray-600 text-sm mb-0">
               Don&apos;t have an account?{" "}
               <Link
-                to="/register"
+                to="/"
                 className="text-purple-600 no-underline font-semibold transition-all relative hover:text-purple-700 after:content-[''] after:absolute after:bottom-[-2px] after:left-0 after:w-0 after:h-0.5 after:bg-gradient-to-r after:from-purple-500 after:to-purple-700 after:transition-all hover:after:w-full"
               >
                 Sign up here

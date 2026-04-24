@@ -2,6 +2,8 @@ import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./presentation/routes/authRoute";
+import serviceRoutes from "./presentation/routes/serviceRoute";
+
 
 dotenv.config();
 
@@ -20,6 +22,7 @@ app.get("/", (_req: Request, res: Response) => {
 });
 
 app.use("/auth", authRoutes);
+app.use("/api/services", serviceRoutes);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: "Route not found" });
