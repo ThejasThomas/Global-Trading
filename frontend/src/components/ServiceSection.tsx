@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getServices } from "../services/service/service.api";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 export interface Service {
   _id: string;
   name: string;
@@ -9,7 +8,6 @@ export interface Service {
   more: string;
 }
 
-// ─── 3D Hexagon Gem Icon ──────────────────────────────────────────────────────
 interface HexGemProps {
   active: boolean;
 }

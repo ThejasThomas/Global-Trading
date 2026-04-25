@@ -1,16 +1,59 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const NAV_LINKS = [ "About", "Services", "Sectors"];
 
 const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const navigate = useNavigate();
+
+const user = JSON.parse(localStorage.getItem("user") || "{}");
+const token = localStorage.getItem("token");
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+  const handleLogout = () => {
+  toast(
+    ({ closeToast }) => (
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-white"> ⚠️ Are you sure you want to logout?</p>
+
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={() => {
+              closeToast();
+            }}
+            className="px-3 py-1 text-xs border border-gray-500 text-gray-300 rounded"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={() => {
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              closeToast();
+              navigate("/login");
+            }}
+            className="px-3 py-1 text-xs border border-red-500 text-red-400 rounded"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    ),
+    {
+      autoClose: false,
+      closeOnClick: false,
+      draggable: false,
+    }
+  );
+};
 
   return (
     <nav
@@ -34,26 +77,69 @@ const Navbar: React.FC = () => {
             <div className="text-green-400 text-[9px] tracking-[0.25em] uppercase font-medium">
               Global Solutions
             </div>
+            {token && (
+  <span className="text-green-400 text-xs ml-2">
+    {user.name || "User"}
+  </span>
+)}
           </div>
         </div>
 
         {/* ── Desktop Links ── */}
         <div className="hidden md:flex items-center gap-8">
           {NAV_LINKS.map((link) => (
-            <a
-              key={link}
-              href="#"
-              className="text-green-300/55 hover:text-green-400 text-[11px] tracking-[0.2em] uppercase font-medium transition-colors duration-200"
-            >
-              {link}
-            </a>
-          ))}
+  <a
+    key={link}
+    href={`#${link.toLowerCase()}`}
+    className="text-green-300/55 hover:text-green-400 text-[11px] tracking-[0.2em] uppercase font-medium transition-colors duration-200"
+  >
+    {link}
+  </a>
+))}
         </div>
 
-        {/* ── CTA Button ── */}
-        <button className="hidden md:block border border-green-500/40 hover:border-green-400/70 hover:bg-green-500/8 text-green-400 text-[10px] tracking-[0.2em] uppercase font-semibold px-5 py-2.5 transition-all duration-200">
-         CONTACT US
-        </button>
+        <div className="hidden md:flex items-center gap-4">
+  
+  {/* ADMIN */}
+  {token && user.role === "admin" && (
+    <button
+      onClick={() => navigate("/admin/dashboard")}
+      className="border border-green-500/40 text-green-400 text-[10px] px-4 py-2"
+    >
+      Dashboard
+    </button>
+  )}
+
+  {/* USER */}
+  {token && user.role === "user" && (
+    <button
+      onClick={() => navigate("/home")}
+      className="border border-green-500/40 text-green-400 text-[10px] px-4 py-2"
+    >
+      Home
+    </button>
+  )}
+
+  {/* LOGOUT */}
+  {token && (
+    <button
+      onClick={handleLogout}
+      className="border border-red-500/40 text-red-400 text-[10px] px-4 py-2"
+    >
+      Logout
+    </button>
+  )}
+
+  {/* NOT LOGGED */}
+  {!token && (
+    <button
+      onClick={() => navigate("/login")}
+      className="border border-green-500/40 text-green-400 text-[10px] px-4 py-2"
+    >
+      Login
+    </button>
+  )}
+</div>
 
         {/* ── Mobile Hamburger ── */}
         <button
@@ -101,9 +187,45 @@ const Navbar: React.FC = () => {
               {link}
             </a>
           ))}
-          <button className="mt-2 border border-green-500/40 text-green-400 text-[10px] tracking-[0.2em] uppercase font-semibold px-4 py-2.5 w-fit">
-            CONTACT US
-          </button>
+          {/* USER */}
+{token && user.role === "user" && (
+  <button
+    onClick={() => navigate("/home")}
+    className="border border-green-500/40 text-green-400 text-[10px] px-4 py-2 w-fit"
+  >
+    Home
+  </button>
+)}
+
+{/* ADMIN */}
+{token && user.role === "admin" && (
+  <button
+    onClick={() => navigate("/admin/dashboard")}
+    className="border border-green-500/40 text-green-400 text-[10px] px-4 py-2 w-fit"
+  >
+    Dashboard
+  </button>
+)}
+
+{/* LOGOUT */}
+{token && (
+  <button
+    onClick={handleLogout}
+    className="border border-red-500/40 text-red-400 text-[10px] px-4 py-2 w-fit"
+  >
+    Logout
+  </button>
+)}
+
+{/* LOGIN */}
+{!token && (
+  <button
+    onClick={() => navigate("/login")}
+    className="border border-green-500/40 text-green-400 text-[10px] px-4 py-2 w-fit"
+  >
+    Login
+  </button>
+)}
         </div>
       </div>
     </nav>

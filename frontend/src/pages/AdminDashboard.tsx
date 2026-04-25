@@ -1,12 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   deleteService,
   getServices,
   addService,
   updateService,
-} from '../services/service/service.api';
-import { Trash2, Edit2, Plus, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { toast } from 'react-toastify';
+} from "../services/service/service.api";
+import {
+  Trash2,
+  Edit2,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  X,
+} from "lucide-react";
+import { toast } from "react-toastify";
 interface Service {
   _id: string;
   name: string;
@@ -26,17 +33,20 @@ const AdminDashboard: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
   const [form, setForm] = useState<FormData>({
-    name: '',
-    details: '',
-    more: '',
+    name: "",
+    details: "",
+    more: "",
   });
 
   const fetchServices = async (): Promise<void> => {
     setLoading(true);
     try {
       const res = await getServices(page, 6);
+
       setServices(res.data.services);
+      setTotalPages(res.data.totalPages);
     } finally {
       setLoading(false);
     }
@@ -46,51 +56,51 @@ const AdminDashboard: React.FC = () => {
     fetchServices();
   }, [page]);
 
-const handleDelete = (id: string): void => {
-  toast.info(
-    ({ closeToast }) => (
-      <div className="flex flex-col gap-3">
-        <p className="text-sm font-medium">
-          Are you sure you want to delete?
-        </p>
+  const handleDelete = (id: string): void => {
+    toast.info(
+      ({ closeToast }) => (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm font-medium">
+            Are you sure you want to delete?
+          </p>
 
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={closeToast}
-            className="px-3 py-1 bg-gray-600 rounded"
-          >
-            Cancel
-          </button>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={closeToast}
+              className="px-3 py-1 bg-gray-600 rounded"
+            >
+              Cancel
+            </button>
 
-          <button
-            onClick={async () => {
-              try {
-                await deleteService(id);
-                toast.success('Deleted successfully');
-                fetchServices();
-              } catch {
-                toast.error('Delete failed');
-              }
-              closeToast?.();
-            }}
-            className="px-3 py-1 bg-red-600 rounded"
-          >
-            Delete
-          </button>
+            <button
+              onClick={async () => {
+                try {
+                  await deleteService(id);
+                  toast.success("Deleted successfully");
+                  fetchServices();
+                } catch {
+                  toast.error("Delete failed");
+                }
+                closeToast?.();
+              }}
+              className="px-3 py-1 bg-red-600 rounded"
+            >
+              Delete
+            </button>
+          </div>
         </div>
-      </div>
-    ),
-    {
-      position: "top-center",
-      autoClose: false,
-      closeOnClick: false,
-    }
-  );
-};
+      ),
+      {
+        position: "top-center",
+        autoClose: false,
+        closeOnClick: false,
+      },
+    );
+  };
 
   const handleAdd = (): void => {
     setEditingService(null);
-    setForm({ name: '', details: '', more: '' });
+    setForm({ name: "", details: "", more: "" });
     setShowModal(true);
   };
 
@@ -105,41 +115,41 @@ const handleDelete = (id: string): void => {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ): void => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
- const handleSubmit = async (): Promise<void> => {
-  if (!form.name.trim() || !form.details.trim()) {
-    toast.error('Please fill in all required fields');
-    return;
-  }
-
-  try {
-    if (editingService) {
-      await updateService(editingService._id, form);
-      toast.success('Service updated successfully');
-    } else {
-      await addService(form);
-      toast.success('Service created successfully');
+  const handleSubmit = async (): Promise<void> => {
+    if (!form.name.trim() || !form.details.trim()) {
+      toast.error("Please fill in all required fields");
+      return;
     }
 
-    setShowModal(false);
-    setForm({ name: '', details: '', more: '' });
-    setEditingService(null);
-    fetchServices();
-  } catch (error) {
-    console.error(error);
-    toast.error('Something went wrong');
-  }
-};
+    try {
+      if (editingService) {
+        await updateService(editingService._id, form);
+        toast.success("Service updated successfully");
+      } else {
+        await addService(form);
+        toast.success("Service created successfully");
+      }
+
+      setShowModal(false);
+      setForm({ name: "", details: "", more: "" });
+      setEditingService(null);
+      fetchServices();
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong");
+    }
+  };
 
   const handleCloseModal = (): void => {
     setShowModal(false);
     setEditingService(null);
-    setForm({ name: '', details: '', more: '' });
+    setForm({ name: "", details: "", more: "" });
   };
 
   return (
@@ -147,7 +157,9 @@ const handleDelete = (id: string): void => {
       {/* HEADER */}
       <div className="border-b border-green-900/30 bg-[#051108]">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Service Management</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">
+            Service Management
+          </h1>
           <p className="text-green-300/60 text-sm">
             Create, edit, and manage your services
           </p>
@@ -157,9 +169,9 @@ const handleDelete = (id: string): void => {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* ACTION BUTTON */}
         <div className="mb-8 flex justify-between items-center">
-          <p className="text-green-300/70 text-sm">
-            Showing {services.length} services on page {page}
-          </p>
+          <span className="text-green-300/60 text-sm font-medium px-4">
+            Page {page} of {totalPages}
+          </span>
           <button
             onClick={handleAdd}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-green-500/20"
@@ -197,7 +209,9 @@ const handleDelete = (id: string): void => {
                     <h3 className="text-lg font-semibold text-white mb-1 line-clamp-1">
                       {service.name}
                     </h3>
-                    <p className="text-green-300/60 text-xs">ID: {service._id.slice(-8)}</p>
+                    <p className="text-green-300/60 text-xs">
+                      ID: {service._id.slice(-8)}
+                    </p>
                   </div>
                 </div>
 
@@ -249,8 +263,9 @@ const handleDelete = (id: string): void => {
               Page {page}
             </span>
             <button
+              disabled={page === totalPages}
               onClick={() => setPage((p) => p + 1)}
-              className="flex items-center gap-2 border border-green-900/30 hover:border-green-500/50 text-green-400 hover:text-green-300 font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+              className="flex items-center gap-2 border border-green-900/30 hover:border-green-500/50 text-green-400 hover:text-green-300 disabled:opacity-50 disabled:cursor-not-allowed font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
             >
               Next
               <ChevronRight size={18} />
@@ -266,7 +281,7 @@ const handleDelete = (id: string): void => {
             {/* MODAL HEADER */}
             <div className="flex justify-between items-center border-b border-green-900/20 p-6">
               <h2 className="text-2xl font-bold text-white">
-                {editingService ? 'Edit Service' : 'Add New Service'}
+                {editingService ? "Edit Service" : "Add New Service"}
               </h2>
               <button
                 onClick={handleCloseModal}
@@ -333,7 +348,7 @@ const handleDelete = (id: string): void => {
                 onClick={handleSubmit}
                 className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-green-500/20"
               >
-                {editingService ? 'Update Service' : 'Create Service'}
+                {editingService ? "Update Service" : "Create Service"}
               </button>
             </div>
           </div>
